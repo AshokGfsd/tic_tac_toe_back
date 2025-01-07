@@ -4,6 +4,10 @@ const http = require("http");
 const app = express(),
   server = http.createServer(app);
 
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
 class SocketManager {
   constructor(server, corsOptions) {
     this.io = new Server(server, { cors: corsOptions });
