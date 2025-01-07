@@ -18,12 +18,15 @@ class SocketManager {
 
   initializeSocketEvents() {
     this.io.on("connection", (socket) => {
-      console.log("*************connected****************");
+      console.log("*************connected****************", socket.id);
       socket.on("create", () => this.createRoom(socket));
       socket.on("join", (data) => this.join(socket, data));
       socket.on("play", (data) => this.click(socket, data));
       socket.on("send_audio", (audioStream) =>
         this.broadcastAudio(socket, audioStream)
+      );
+      socket.on("send_audio_chunk", (audioChunk) =>
+        this.handleAudioChunk(socket, audioChunk)
       );
       socket.on("_disconnect", () => this.handleDisconnect(socket));
       socket.on("disconnect", () => this.handleDisconnect(socket));
@@ -38,6 +41,15 @@ class SocketManager {
     // Broadcast the audio stream to other players in the room
     socket.to(roomId).emit("receive_audio", audioStream);
   }
+
+  handleAudioChunk(socket, audioChunk) {
+    const roomId = this.socket_ids[socket.id];
+    if (!roomId) return socket.emit("error", "Join a room first!");
+
+    // Broadcast the audio chunk to other players in the room
+    socket.to(roomId).emit("receive_audio_chunk", audioChunk);
+  }
+
   createRoom(socket) {
     const roomId = this.generateRoomID();
     this.rooms[roomId] = {
@@ -139,4 +151,3 @@ const corsOptions = { origin: "*" };
 const socketManager = new SocketManager(server, corsOptions);
 
 server.listen(4445, () => console.log("Listening on port 4445"));
-
